@@ -16,7 +16,7 @@ dependencies:
     - jupyterlab    # next-generation Jupyter
     - matplotlib    # 2D plotting library
     - numpy         # N-d array and numerics
-    - obspy   	    # Seismology in Python
+    - obspy         # Seismology in Python
     - pandas        # Labeled array library
     - scipy         # Common math/stats/science functions
     - scikit-learn  # Machine learning library
@@ -24,6 +24,4 @@ dependencies:
     - seaborn       # Statistical visualizations
     - six           # Python 2/3 compatibility
     - tqdm          # Nice progressbar for longer computations
-    - pip:
-        # These are additional libraries to search for on PyPI
-        - awscli   # AWS command line interface
+    - pip
