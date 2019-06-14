@@ -88,9 +88,9 @@ def download(OUTDIR,starttime=None, endtime=None,
 
     # get all files to dowload in one list 
     files2download = [file["FILEPATH"] for stat in files2download for file in stat]
-    if "~" in OUT_DIR:
-        OUT_DIR = os.path.expanduser(OUT_DIR)
-    out_files = [os.path.join(OUT_DIR,f) for f in files2download]
+    if "~" in OUTDIR:
+        OUTDIR = os.path.expanduser(OUTDIR)
+    out_files = [os.path.join(OUTDIR,f) for f in files2download]
     file_dir = list(set([os.path.dirname(f) for f in out_files]))
 
     # create directories if necessary 
