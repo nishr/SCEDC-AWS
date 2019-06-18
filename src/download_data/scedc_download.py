@@ -1,19 +1,38 @@
+import os 
+import datetime
+from math import ceil   
+from concurrent import futures
 import boto3  
 from boto3.dynamodb.conditions import Key, Attr 
 from decimal import Decimal 
-import datetime  
-from math import ceil  
-import os  
+
 
 def download(OUTDIR,starttime=None, endtime=None,
                      network=None, station=None, location=None, channel=None,
                      minlatitude=None, maxlatitude=None, minlongitude=None,
                      maxlongitude=None):
     """
-    Query the data from SCEDC on S3. 
+    Download SCEDC data from S3. 
 
-
+    Args:
+        OUTDIR (str): The output directory.
+        starttime (datetime.datetime): The starttime of the download. 
+        endtime (datetime.datetime): The endtime of the download. 
+        network (str): Network to download from. If network = "*" or is unspecified, 
+                       data is downloaded from all available networks. 
+        station (str): Station to download, e.g. "RFO". If station = "*" or is unspecified, 
+                       data is downloaded from all available stations. 
+        channel (str): Channels to download, e.g. "HH*". If channel = "*" or is unspecified, 
+                       data is downloaded from all available channels.
+        channel (str): Locations to download, e.g. "00". If channel = "*" or is unspecified, 
+                       data is downloaded from all available locations. NOTE: most files do 
+                       not have a location. 
+        minlatitude (float): Minimum latitude in data search.
+        maxlatitude (float): Maximum latitude in data search.
+        minlongitude (float): Minimum longitude in data search.
+        maxlongitude (float): Maximum longitude in data search.
     """
+
     # get request details and filter out Nones 
     locs = locals()
     locs = {k:v for k,v in locs.items() if v is not None}
@@ -25,6 +44,10 @@ def download(OUTDIR,starttime=None, endtime=None,
                 "station":"STA", "location":"LOC", "channel":"CHAN", 
                 "minlatitude":"LAT", "maxlatitude":"LAT", "minlongitude":"LON",
                 "maxlongitude":"LON"}
+
+    # get number of concurrent threads for transfer 
+    NUM_CPU = os.cpu_count()
+    maxworkers = NUM_CPU * 10
 
     # create request filter
     FilterExpression = []
@@ -99,13 +122,28 @@ def download(OUTDIR,starttime=None, endtime=None,
             os.makedirs(direc)
 
     # download files from s3 to ec2
-    s3 = boto3.resource('s3')
+    s3 = boto3.client('s3')
     bucket = "scedc-pds"
 
-    for ii in range(len(out_files)):
-        s3.meta.client.download_file(bucket,files2download[ii],out_files[ii])
-        print("Downloading file: {}, {} of {}".format(files2download[ii],
-                ii+1,len(files2download)),end="\r")
+    # helper functions within the local scope
+    def fetch(key):
+        out = os.path.join(OUTDIR,key)
+        s3.download_file(bucket, key, out)
+        print("Downloading file: {}".format(key),end="\r")
+        return 
+
+    def fetch_all(keys,maxworkers=5):
+        print("Starting Download...\n")
+        futureL = []
+        with futures.ThreadPoolExecutor(max_workers=maxworkers) as executor:
+            for ii in range(len(keys)):
+                future = executor.submit(fetch,keys[ii])
+                futureL.append(future)
+        futures.wait(futureL)
+        return 
+
+    # download all the data in parallel
+    fetch_all(files2download,maxworkers=maxworkers)
     
     return 
 
@@ -120,3 +158,4 @@ def float_to_decimal(value):
         return Decimal(value)
     else: 
         return value
+
