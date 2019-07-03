@@ -47,7 +47,7 @@ def download(OUTDIR,starttime=None, endtime=None,
 
     # get number of concurrent threads for transfer 
     NUM_CPU = os.cpu_count()
-    maxworkers = NUM_CPU * 10
+    maxworkers = min([NUM_CPU * 10, 20])
 
     # create request filter
     FilterExpression = []
@@ -91,7 +91,6 @@ def download(OUTDIR,starttime=None, endtime=None,
     files2download = []
     for station in stations:
         KeyConditionExpression = []
-        filter_str = ', '.join(["\'{}\'".format(s) for s in stations])
         KeyConditionExpression.append('Key("stationID").eq("{}")'.format(station))
         KeyConditionExpression.append('Key("DATE").between("{}","{}")'.format(
                                 locs["starttime"],locs["endtime"]))
