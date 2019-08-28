@@ -131,7 +131,7 @@ def download(OUTDIR,starttime=None, endtime=None,
         print("Downloading file: {}".format(key),end="\r")
         return 
 
-    def fetch_all(keys,maxworkers=5):
+    def fetch_all(keys,maxworkers=maxworkers):
         print("Starting Download...\n")
         futureL = []
         with futures.ThreadPoolExecutor(max_workers=maxworkers) as executor:

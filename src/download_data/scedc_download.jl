@@ -27,20 +27,20 @@ Download SCEDC data from S3.
 
 
 function download(OUTDIR::String;
-                        starttime::Union{Date,Nothing}=nothing,
-                        endtime::Union{Date,Nothing}=nothing,
-                        network::Union{String,Nothing}=nothing,
-                        station::Union{String,Nothing}=nothing,
-                        location::Union{String,Nothing}=nothing,
-                        channel::Union{String,Nothing}=nothing,
-                        minlatitude::Union{Float64,Nothing}=nothing,
-                        maxlatitude::Union{Float64,Nothing}=nothing,
-                        minlongitude::Union{Float64,Nothing}=nothing,
-                        maxlongitude::Union{Float64,Nothing}=nothing,
-                        latitude::Union{Float64,Nothing}=nothing,
-                        longitude::Union{Float64,Nothing}=nothing,
-                        minradius::Union{Float64,Nothing}=nothing,
-                        maxradius::Union{Float64,Nothing}=nothing)
+                  starttime::Union{Date,Nothing}=nothing,
+                  endtime::Union{Date,Nothing}=nothing,
+                  network::Union{String,Nothing}=nothing,
+                  station::Union{String,Nothing}=nothing,
+                  location::Union{String,Nothing}=nothing,
+                  channel::Union{String,Nothing}=nothing,
+                  minlatitude::Union{Float64,Nothing}=nothing,
+                  maxlatitude::Union{Float64,Nothing}=nothing,
+                  minlongitude::Union{Float64,Nothing}=nothing,
+                  maxlongitude::Union{Float64,Nothing}=nothing,
+                  latitude::Union{Float64,Nothing}=nothing,
+                  longitude::Union{Float64,Nothing}=nothing,
+                  minradius::Union{Float64,Nothing}=nothing,
+                  maxradius::Union{Float64,Nothing}=nothing)
 
     # check for inputs
     if all(.!isnothing.([starttime,endtime,network,station,location,channel,
