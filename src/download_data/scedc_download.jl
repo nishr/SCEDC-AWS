@@ -1,3 +1,6 @@
+using Distributed
+addprocs(length(Sys.cpu_info()) - 1)
+@everywhere begin
 using Dates, AWSCore, AWSS3, DataFrames
 
 """
@@ -92,6 +95,34 @@ function download(OUTDIR::String;
     df_subset!(filedf,channel,:CHAN)
     df_subset!(filedf,location,:LOC)
 
+    # create directory for instrument responses
+    println("Downloading stationXML... $(now())")
+    XMLDIR = joinpath(OUTDIR,"FDSNstationXML")
+    mkpath(XMLDIR)
+    networks = filedf[:NET]
+    stations = filedf[:STA]
+    xmlfiles = networks .* "_" .* stations .* ".xml"
+    ind = indexin(unique(xmlfiles), xmlfiles)
+    networks, stations, xmlfiles = networks[ind], stations[ind], xmlfiles[ind]
+    xml_in = [joinpath("FDSNstationXML",networks[ii],xmlfiles[ii]) for ii = 1:length(xmlfiles)]
+    xml_out = [joinpath(XMLDIR,networks[ii],xmlfiles[ii]) for ii = 1:length(xmlfiles)]
+    xml_dir = unique([dirname(f) for f in xml_out])
+
+    # check if requested channels have an instrument response
+    stations2remove = []
+    for ii = 1:length(xml_in)
+        if s3_exists(aws,"scedc-pds",xml_in[ii])
+            println(xml_in[ii],xml_out[ii])
+        else
+            push!(stations2remove,xmlfiles[ii])
+        end
+    end
+
+    stations2remove = [replace(s[1:end-4],"_"=>".") for s in stations2remove]
+    for ii = 1:length(stations2remove)
+        df_remove!(filedf,stations2remove[ii],:stationID)
+    end
+
     # return if nothing in dataframe
     if size(filedf,1) == 0
         println("No data available for request! Exiting.")
@@ -114,10 +145,11 @@ function download(OUTDIR::String;
 
     # download files
     println("Starting Download...      $(now())")
-    Threads.@threads for ii = 1:length(files2download)
-        s3_get_file(aws, "scedc-pds", files2download[ii], out_files[ii])
-        print("Downloading file: $(files2download[ii])       \r")
-    end
+    # Threads.@threads for ii = 1:length(files2download)
+    #     s3_get_file(aws, "scedc-pds", files2download[ii], out_files[ii])
+    #     print("Downloading file: $(files2download[ii])       \r")
+    # end
+    pmap(s3_file_map,files2download,out_files)
     println("Download Complete!        $(now())          ")
     tend = now()
     println("Download took $(Dates.canonicalize(Dates.CompoundPeriod(tend - tstart)))")
@@ -130,6 +162,11 @@ function df_subset!(df::DataFrame,col::String,colsymbol::Symbol)
 end
 
 function df_subset!(df::DataFrame,col::Nothing,colsymbol::Symbol)
+end
+
+function df_remove!(df::DataFrame,col::String,colsymbol::Symbol)
+        ind = occursin.(col,df[colsymbol])
+        deleterows!(df,ind)
 end
 
 function regex_helper(reg::String)
@@ -147,4 +184,11 @@ function regex_helper(reg::String)
             reg = Regex(reg)
     end
     return reg
+end
+
+function s3_file_map(filein::String,fileout::String)
+    s3_get_file(aws, "scedc-pds", filein, fileout)
+    println("Downloading file: $filein       \r")
+end
+
 end
