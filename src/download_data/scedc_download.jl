@@ -130,6 +130,8 @@ function Date2yearday(d::Date)
     return string(Year(d).value) * ('0' ^ (3 - n)) * string(days)
 end
 
+end
+
 """
 
   download()
@@ -293,13 +295,14 @@ function download(OUTDIR::String;
 
     # download files
     println("Starting Download...      $(now())")
+    println("Using $(nworkers()) cores...")
     # Threads.@threads for ii = 1:length(files2download)
     #     s3_get_file(aws, "scedc-pds", files2download[ii], out_files[ii])
     #     print("Downloading file: $(files2download[ii])       \r")
     # end
     @eval @everywhere aws=$aws
     @eval @everywhere files2download=$files2download
-    @eval @everywhere outfiles=$outfiles
+    @eval @everywhere out_files=$out_files
     pmap(s3_file_map,files2download,out_files)
     println("Download Complete!        $(now())          ")
     tend = now()
