@@ -1,20 +1,8 @@
 #!/bin/bash
-if [ -d "/shared" ]
-then
-    cd /shared
-else
-    cd
-fi
+cd
 wget https://julialang-s3.julialang.org/bin/linux/x64/1.1/julia-1.1.1-linux-x86_64.tar.gz
 tar xvfa julia-1.1.1-linux-x86_64.tar.gz
 rm julia-1.1.1-linux-x86_64.tar.gz
-if [ -d "/shared" ]
-then
-    echo PATH=\$PATH:/shared/julia-1.1.1/bin/ >> ~/.bashrc
-else
-    echo PATH=\$PATH:~/julia-1.1.1/bin/ >> ~/.bashrc
-fi
+echo PATH=\$PATH:~/julia-1.1.1/bin/ >> ~/.bashrc
 source ~/.bashrc
 julia ~/SCEDC-AWS/src/build_environment/julia/add-packages.jl
-cd
-
