@@ -1,8 +1,6 @@
 export download
 using Distributed
-if nworkers() < length(Sys.cpu_info()) - 1
-    addprocs(length(Sys.cpu_info()) - 1)
-end
+addprocs()
 @everywhere begin
 using Dates, AWSCore, AWSS3, DataFrames
 
